@@ -1,0 +1,216 @@
+:root {
+  --copper: #a9714e;
+  --copper-dark: #8a5a3b;
+  --tan: #d8c4a8;
+  --tan-soft: #ece2d3;
+  --cream: #fbf8f4;
+  --ink: #4a3222;
+  --ink-soft: #8c7a68;
+  --line: #e4d8c8;
+  --danger: #b5533e;
+  --radius: 14px;
+  --shadow: 0 2px 14px rgba(74, 50, 34, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .brand {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid var(--line);
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 24px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-block img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.brand-block .brand {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+.brand-block .brand small {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-btn:hover { background: var(--tan-soft); color: var(--ink); }
+.nav-btn.active { background: var(--copper); color: #fff; }
+
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 900px;
+}
+
+.page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-header h1 { font-size: 26px; }
+.page-header .sub { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
+
+button.primary {
+  background: var(--copper);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+button.primary:hover { background: var(--copper-dark); }
+
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+button.ghost:hover { border-color: var(--copper); color: var(--copper); }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.card h3 { font-size: 16px; margin-bottom: 2px; }
+.card .meta { font-size: 12.5px; color: var(--ink-soft); }
+.card .actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-soft);
+}
+.empty-state .leaf { font-size: 28px; margin-bottom: 8px; }
+
+form.panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+form.panel .field { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+form.panel label { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+form.panel input, form.panel textarea, form.panel select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--cream);
+}
+form.panel input:focus, form.panel textarea:focus, form.panel select:focus {
+  outline: 2px solid var(--copper);
+  outline-offset: 1px;
+}
+form.panel .row { display: flex; gap: 12px; }
+form.panel .row .field { flex: 1; }
+form.panel .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--tan-soft);
+  color: var(--copper-dark);
+}
+
+.divider-leaf {
+  text-align: center;
+  color: var(--tan);
+  font-size: 13px;
+  margin: 18px 0;
+  letter-spacing: 0.3em;
+}
+
+@media (max-width: 720px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 14px; }
+  .brand-block { display: none; }
+  .main { padding: 20px; }
+}
