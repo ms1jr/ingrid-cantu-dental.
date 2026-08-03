@@ -1,25 +1,56 @@
 import { useState } from 'react';
 import { db } from '../db';
+import { buildWhatsAppLink } from '../utils/whatsapp';
+
+const EMPTY = { patientId: '', service: '', cost: '', date: '' };
+
+function startOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
 export default function Treatments({ treatments, patients, reload }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ patientId: '', service: '', cost: '', date: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(EMPTY);
+
+  function startCreate() {
+    setForm(EMPTY);
+    setEditingId(null);
+    setShowForm(true);
+  }
+
+  function startEdit(t) {
+    setForm({ patientId: t.patientId, service: t.service, cost: String(t.cost), date: t.date });
+    setEditingId(t.id);
+    setShowForm(true);
+  }
+
+  function cancelForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.patientId || !form.service) return;
     const patient = patients.find((p) => p.id === form.patientId);
+    const existing = editingId ? treatments.find((t) => t.id === editingId) : null;
     await db.put('treatments', {
-      id: db.uid(),
+      id: editingId || db.uid(),
       patientId: form.patientId,
       patientName: patient ? patient.name : 'Paciente',
       service: form.service,
       cost: Number(form.cost) || 0,
       date: form.date || new Date().toISOString().slice(0, 10),
-      createdAt: Date.now(),
+      createdAt: existing ? existing.createdAt : Date.now(),
     });
-    setForm({ patientId: '', service: '', cost: '', date: '' });
-    setShowForm(false);
+    cancelForm();
     reload();
   }
 
@@ -29,20 +60,48 @@ export default function Treatments({ treatments, patients, reload }) {
   }
 
   const sorted = [...treatments].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const total = treatments.reduce((sum, t) => sum + (t.cost || 0), 0);
+
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const weekStart = startOfWeek(now);
+  const monthStr = todayStr.slice(0, 7);
+  const yearStr = todayStr.slice(0, 4);
+
+  const sum = (list) => list.reduce((s, t) => s + (t.cost || 0), 0);
+  const dailyTotal = sum(treatments.filter((t) => t.date === todayStr));
+  const weeklyTotal = sum(treatments.filter((t) => new Date(t.date) >= weekStart));
+  const monthlyTotal = sum(treatments.filter((t) => t.date.slice(0, 7) === monthStr));
+  const annualTotal = sum(treatments.filter((t) => t.date.slice(0, 4) === yearStr));
 
   return (
     <div>
       <div className="page-header">
         <div>
           <h1>Tratamientos y pagos</h1>
-          <div className="sub">
-            {treatments.length} registros · Total: ${total.toLocaleString('es-MX')}
-          </div>
+          <div className="sub">{treatments.length} registros</div>
         </div>
-        <button className="primary" onClick={() => setShowForm((s) => !s)}>
+        <button className="primary" onClick={showForm ? cancelForm : startCreate}>
           {showForm ? 'Cancelar' : '+ Nuevo registro'}
         </button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+          <div className="meta">Hoy</div>
+          <h2 style={{ fontSize: 20, marginTop: 4 }}>${dailyTotal.toLocaleString('es-MX')}</h2>
+        </div>
+        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+          <div className="meta">Esta semana</div>
+          <h2 style={{ fontSize: 20, marginTop: 4 }}>${weeklyTotal.toLocaleString('es-MX')}</h2>
+        </div>
+        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+          <div className="meta">Este mes</div>
+          <h2 style={{ fontSize: 20, marginTop: 4 }}>${monthlyTotal.toLocaleString('es-MX')}</h2>
+        </div>
+        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+          <div className="meta">Este año</div>
+          <h2 style={{ fontSize: 20, marginTop: 4 }}>${annualTotal.toLocaleString('es-MX')}</h2>
+        </div>
       </div>
 
       {showForm && (
@@ -89,7 +148,9 @@ export default function Treatments({ treatments, patients, reload }) {
             />
           </div>
           <div className="form-actions">
-            <button className="primary" type="submit">Guardar registro</button>
+            <button className="primary" type="submit">
+              {editingId ? 'Guardar cambios' : 'Guardar registro'}
+            </button>
           </div>
         </form>
       )}
@@ -101,20 +162,39 @@ export default function Treatments({ treatments, patients, reload }) {
         </div>
       )}
 
-      {sorted.map((t) => (
-        <div className="card" key={t.id}>
-          <div className="card-row">
-            <div>
-              <h3>{t.service}</h3>
-              <div className="meta">{t.patientName} · {t.date}</div>
-            </div>
-            <div className="actions" style={{ alignItems: 'center' }}>
-              <span className="badge">${t.cost.toLocaleString('es-MX')}</span>
-              <button className="ghost" onClick={() => handleDelete(t.id)}>Eliminar</button>
+      {sorted.map((t) => {
+        const patient = patients.find((p) => p.id === t.patientId);
+        return (
+          <div className="card" key={t.id}>
+            <div className="card-row">
+              <div>
+                <h3>{t.service}</h3>
+                <div className="meta">{t.patientName} · {t.date}</div>
+              </div>
+              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                <span className="badge">${t.cost.toLocaleString('es-MX')}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {patient?.phone && (
+                    <a
+                      className="ghost whatsapp-btn"
+                      href={buildWhatsAppLink(
+                        patient.phone,
+                        `Hola ${t.patientName}, te damos seguimiento a tu tratamiento (${t.service}) en Ingrid Cantú Dental. ¿Cómo te has sentido?`
+                      )}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      💬
+                    </a>
+                  )}
+                  <button className="ghost" onClick={() => startEdit(t)}>Editar</button>
+                  <button className="ghost" onClick={() => handleDelete(t.id)}>Eliminar</button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
