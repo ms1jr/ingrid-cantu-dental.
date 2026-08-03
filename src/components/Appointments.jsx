@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { db } from '../db';
 import { downloadAppointmentICS } from '../utils/ics';
 import { buildReminderShortcutURL } from '../utils/shortcuts';
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import WhatsAppButton from './WhatsAppButton';
 
 const EMPTY = { patientId: '', date: '', time: '', notes: '' };
 
@@ -58,12 +58,13 @@ export default function Appointments({ appointments, patients, reload }) {
     (a, b) => new Date(a.datetime) - new Date(b.datetime)
   );
 
-  function confirmMessage(a) {
-    const label = new Date(a.datetime).toLocaleString('es-MX', {
-      dateStyle: 'full',
-      timeStyle: 'short',
-    });
-    return `Hola ${a.patientName}, te confirmamos tu cita en Ingrid Cantú Dental el ${label}. ¿Puedes confirmarnos tu asistencia?`;
+  function templatesFor(a) {
+    const label = new Date(a.datetime).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' });
+    return [
+      { label: 'Confirmar esta cita', text: `Hola ${a.patientName}, te confirmamos tu cita en Ingrid Cantú Dental el ${label}. ¿Puedes confirmarnos tu asistencia?` },
+      { label: 'Pedir reagendar', text: `Hola ${a.patientName}, necesitamos reagendar tu cita del ${label}. ¿Qué otro día u horario te funciona?` },
+      { label: 'Recordatorio amistoso', text: `Hola ${a.patientName}, te recordamos tu cita en Ingrid Cantú Dental el ${label}. ¡Te esperamos!` },
+    ];
   }
 
   return (
@@ -142,37 +143,21 @@ export default function Appointments({ appointments, patients, reload }) {
         </div>
       )}
 
-      {upcoming.map((a) => {
-        const patient = patients.find((p) => p.id === a.patientId);
-        return (
-          <div className="card" key={a.id}>
-            <div className="card-row">
-              <div>
-                <h3>{a.patientName}</h3>
-                <div className="meta">
-                  {new Date(a.datetime).toLocaleString('es-MX', {
-                    dateStyle: 'full',
-                    timeStyle: 'short',
-                  })}
-                </div>
-                {a.notes && <div className="meta" style={{ marginTop: 6 }}>{a.notes}</div>}
+      <div className="grid-2">
+        {upcoming.map((a) => {
+          const patient = patients.find((p) => p.id === a.patientId);
+          return (
+            <div className="card accent-tan" key={a.id}>
+              <h3>{a.patientName}</h3>
+              <div className="meta">
+                {new Date(a.datetime).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' })}
               </div>
-              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <button className="ghost" onClick={() => downloadAppointmentICS(a)}>📅 Calendario</button>
-                  <a className="ghost" style={{ textDecoration: 'none' }} href={buildReminderShortcutURL(a)}>
-                    ⏰ Recordatorio
-                  </a>
-                  {patient?.phone && (
-                    <a
-                      className="ghost whatsapp-btn"
-                      href={buildWhatsAppLink(patient.phone, confirmMessage(a))}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      💬 Confirmar
-                    </a>
-                  )}
+              {a.notes && <div className="meta" style={{ marginTop: 6 }}>{a.notes}</div>}
+              <div className="card-footer">
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className="ghost" onClick={() => downloadAppointmentICS(a)}>📅</button>
+                  <a className="ghost" style={{ textDecoration: 'none' }} href={buildReminderShortcutURL(a)}>⏰</a>
+                  <WhatsAppButton phone={patient?.phone} templates={templatesFor(a)} label="💬" />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="ghost" onClick={() => startEdit(a)}>Editar</button>
@@ -180,9 +165,9 @@ export default function Appointments({ appointments, patients, reload }) {
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
