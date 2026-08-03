@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { db } from '../db';
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import WhatsAppButton from './WhatsAppButton';
 
 const EMPTY = { name: '', phone: '', notes: '' };
 
@@ -43,6 +43,14 @@ export default function Patients({ patients, reload }) {
   async function handleDelete(id) {
     await db.remove('patients', id);
     reload();
+  }
+
+  function templatesFor(p) {
+    return [
+      { label: 'Confirmar próxima cita', text: `Hola ${p.name}, te escribimos de Ingrid Cantú Dental para confirmar tu próxima cita. ¿Nos confirmas tu asistencia?` },
+      { label: 'Agendar nueva cita', text: `Hola ${p.name}, ¿te gustaría agendar tu próxima cita en Ingrid Cantú Dental? Cuéntanos qué día y horario te acomoda.` },
+      { label: 'Seguimiento de tratamiento', text: `Hola ${p.name}, ¿cómo te has sentido después de tu último tratamiento? Cualquier duda, con gusto te ayudamos.` },
+    ];
   }
 
   return (
@@ -102,38 +110,24 @@ export default function Patients({ patients, reload }) {
         </div>
       )}
 
-      {patients
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((p) => (
-          <div className="card" key={p.id}>
-            <div className="card-row">
-              <div>
-                <h3>{p.name}</h3>
-                <div className="meta">{p.phone || 'Sin teléfono'}</div>
-                {p.notes && <div className="meta" style={{ marginTop: 6 }}>{p.notes}</div>}
-              </div>
-              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                {p.phone && (
-                  <a
-                    className="ghost whatsapp-btn"
-                    href={buildWhatsAppLink(
-                      p.phone,
-                      `Hola ${p.name}, te escribimos de Ingrid Cantú Dental. Podemos confirmar tu próxima cita, agendar una nueva o darte seguimiento a tu tratamiento — ¿qué necesitas?`
-                    )}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    💬 WhatsApp
-                  </a>
-                )}
+      <div className="grid-2">
+        {patients
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((p) => (
+            <div className="card accent-copper" key={p.id}>
+              <h3>{p.name}</h3>
+              <div className="meta">{p.phone || 'Sin teléfono'}</div>
+              {p.notes && <div className="meta" style={{ marginTop: 6 }}>{p.notes}</div>}
+              <div className="card-footer">
+                <WhatsAppButton phone={p.phone} templates={templatesFor(p)} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="ghost" onClick={() => startEdit(p)}>Editar</button>
                   <button className="ghost" onClick={() => handleDelete(p.id)}>Eliminar</button>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+      </div>
     </div>
   );
 }
