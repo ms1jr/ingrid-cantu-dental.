@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { db } from '../db';
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import WhatsAppButton from './WhatsAppButton';
 
 const EMPTY = { patientId: '', service: '', cost: '', date: '' };
 
@@ -73,6 +73,14 @@ export default function Treatments({ treatments, patients, reload }) {
   const monthlyTotal = sum(treatments.filter((t) => t.date.slice(0, 7) === monthStr));
   const annualTotal = sum(treatments.filter((t) => t.date.slice(0, 4) === yearStr));
 
+  function templatesFor(t) {
+    return [
+      { label: 'Confirmar próxima cita', text: `Hola ${t.patientName}, te escribimos de Ingrid Cantú Dental para confirmar tu próxima cita.` },
+      { label: 'Agendar nueva cita', text: `Hola ${t.patientName}, ¿agendamos tu próxima cita de seguimiento a tu tratamiento (${t.service})?` },
+      { label: 'Seguimiento', text: `Hola ${t.patientName}, ¿cómo te has sentido después de tu tratamiento (${t.service})? Cualquier duda, aquí estamos.` },
+    ];
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -85,22 +93,22 @@ export default function Treatments({ treatments, patients, reload }) {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+      <div className="stats-row">
+        <div className="stat-card stat-copper">
           <div className="meta">Hoy</div>
-          <h2 style={{ fontSize: 20, marginTop: 4 }}>${dailyTotal.toLocaleString('es-MX')}</h2>
+          <h2>${dailyTotal.toLocaleString('es-MX')}</h2>
         </div>
-        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+        <div className="stat-card stat-tan">
           <div className="meta">Esta semana</div>
-          <h2 style={{ fontSize: 20, marginTop: 4 }}>${weeklyTotal.toLocaleString('es-MX')}</h2>
+          <h2>${weeklyTotal.toLocaleString('es-MX')}</h2>
         </div>
-        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+        <div className="stat-card stat-green">
           <div className="meta">Este mes</div>
-          <h2 style={{ fontSize: 20, marginTop: 4 }}>${monthlyTotal.toLocaleString('es-MX')}</h2>
+          <h2>${monthlyTotal.toLocaleString('es-MX')}</h2>
         </div>
-        <div className="card" style={{ flex: 1, minWidth: 110 }}>
+        <div className="stat-card stat-ink">
           <div className="meta">Este año</div>
-          <h2 style={{ fontSize: 20, marginTop: 4 }}>${annualTotal.toLocaleString('es-MX')}</h2>
+          <h2>${annualTotal.toLocaleString('es-MX')}</h2>
         </div>
       </div>
 
@@ -162,39 +170,27 @@ export default function Treatments({ treatments, patients, reload }) {
         </div>
       )}
 
-      {sorted.map((t) => {
-        const patient = patients.find((p) => p.id === t.patientId);
-        return (
-          <div className="card" key={t.id}>
-            <div className="card-row">
-              <div>
+      <div className="grid-2">
+        {sorted.map((t) => {
+          const patient = patients.find((p) => p.id === t.patientId);
+          return (
+            <div className="card accent-green" key={t.id}>
+              <div className="card-row">
                 <h3>{t.service}</h3>
-                <div className="meta">{t.patientName} · {t.date}</div>
-              </div>
-              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                 <span className="badge">${t.cost.toLocaleString('es-MX')}</span>
+              </div>
+              <div className="meta">{t.patientName} · {t.date}</div>
+              <div className="card-footer">
+                <WhatsAppButton phone={patient?.phone} templates={templatesFor(t)} label="💬" />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {patient?.phone && (
-                    <a
-                      className="ghost whatsapp-btn"
-                      href={buildWhatsAppLink(
-                        patient.phone,
-                        `Hola ${t.patientName}, te damos seguimiento a tu tratamiento (${t.service}) en Ingrid Cantú Dental. ¿Cómo te has sentido?`
-                      )}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      💬
-                    </a>
-                  )}
                   <button className="ghost" onClick={() => startEdit(t)}>Editar</button>
                   <button className="ghost" onClick={() => handleDelete(t.id)}>Eliminar</button>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
