@@ -2,27 +2,50 @@ import { useState } from 'react';
 import { db } from '../db';
 import { downloadAppointmentICS } from '../utils/ics';
 import { buildReminderShortcutURL } from '../utils/shortcuts';
+import { buildWhatsAppLink } from '../utils/whatsapp';
+
+const EMPTY = { patientId: '', date: '', time: '', notes: '' };
 
 export default function Appointments({ appointments, patients, reload }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ patientId: '', date: '', time: '', notes: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(EMPTY);
+
+  function startCreate() {
+    setForm(EMPTY);
+    setEditingId(null);
+    setShowForm(true);
+  }
+
+  function startEdit(a) {
+    const [date, time] = a.datetime.split('T');
+    setForm({ patientId: a.patientId, date, time: time.slice(0, 5), notes: a.notes || '' });
+    setEditingId(a.id);
+    setShowForm(true);
+  }
+
+  function cancelForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.patientId || !form.date || !form.time) return;
     const patient = patients.find((p) => p.id === form.patientId);
+    const existing = editingId ? appointments.find((a) => a.id === editingId) : null;
     const appointment = {
-      id: db.uid(),
+      id: editingId || db.uid(),
       patientId: form.patientId,
       patientName: patient ? patient.name : 'Paciente',
       datetime: `${form.date}T${form.time}:00`,
       durationMinutes: 30,
       notes: form.notes,
-      createdAt: Date.now(),
+      createdAt: existing ? existing.createdAt : Date.now(),
     };
     await db.put('appointments', appointment);
-    setForm({ patientId: '', date: '', time: '', notes: '' });
-    setShowForm(false);
+    cancelForm();
     reload();
   }
 
@@ -35,6 +58,14 @@ export default function Appointments({ appointments, patients, reload }) {
     (a, b) => new Date(a.datetime) - new Date(b.datetime)
   );
 
+  function confirmMessage(a) {
+    const label = new Date(a.datetime).toLocaleString('es-MX', {
+      dateStyle: 'full',
+      timeStyle: 'short',
+    });
+    return `Hola ${a.patientName}, te confirmamos tu cita en Ingrid Cantú Dental el ${label}. ¿Puedes confirmarnos tu asistencia?`;
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -42,7 +73,7 @@ export default function Appointments({ appointments, patients, reload }) {
           <h1>Citas</h1>
           <div className="sub">{appointments.length} programadas</div>
         </div>
-        <button className="primary" onClick={() => setShowForm((s) => !s)}>
+        <button className="primary" onClick={showForm ? cancelForm : startCreate}>
           {showForm ? 'Cancelar' : '+ Nueva cita'}
         </button>
       </div>
@@ -92,7 +123,9 @@ export default function Appointments({ appointments, patients, reload }) {
             />
           </div>
           <div className="form-actions">
-            <button className="primary" type="submit">Agendar cita</button>
+            <button className="primary" type="submit">
+              {editingId ? 'Guardar cambios' : 'Agendar cita'}
+            </button>
           </div>
           {patients.length === 0 && (
             <div className="meta" style={{ marginTop: 10 }}>
@@ -109,36 +142,47 @@ export default function Appointments({ appointments, patients, reload }) {
         </div>
       )}
 
-      {upcoming.map((a) => (
-        <div className="card" key={a.id}>
-          <div className="card-row">
-            <div>
-              <h3>{a.patientName}</h3>
-              <div className="meta">
-                {new Date(a.datetime).toLocaleString('es-MX', {
-                  dateStyle: 'full',
-                  timeStyle: 'short',
-                })}
+      {upcoming.map((a) => {
+        const patient = patients.find((p) => p.id === a.patientId);
+        return (
+          <div className="card" key={a.id}>
+            <div className="card-row">
+              <div>
+                <h3>{a.patientName}</h3>
+                <div className="meta">
+                  {new Date(a.datetime).toLocaleString('es-MX', {
+                    dateStyle: 'full',
+                    timeStyle: 'short',
+                  })}
+                </div>
+                {a.notes && <div className="meta" style={{ marginTop: 6 }}>{a.notes}</div>}
               </div>
-              {a.notes && <div className="meta" style={{ marginTop: 6 }}>{a.notes}</div>}
-            </div>
-            <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="ghost" onClick={() => downloadAppointmentICS(a)}>
-                  📅 Calendario
-                </button>
-                <a className="ghost" style={{ textDecoration: 'none', display: 'inline-block' }}
-                   href={buildReminderShortcutURL(a)}>
-                  ⏰ Recordatorio
-                </a>
+              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button className="ghost" onClick={() => downloadAppointmentICS(a)}>📅 Calendario</button>
+                  <a className="ghost" style={{ textDecoration: 'none' }} href={buildReminderShortcutURL(a)}>
+                    ⏰ Recordatorio
+                  </a>
+                  {patient?.phone && (
+                    <a
+                      className="ghost whatsapp-btn"
+                      href={buildWhatsAppLink(patient.phone, confirmMessage(a))}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      💬 Confirmar
+                    </a>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="ghost" onClick={() => startEdit(a)}>Editar</button>
+                  <button className="ghost" onClick={() => handleDelete(a.id)}>Eliminar</button>
+                </div>
               </div>
-              <button className="ghost" style={{ marginTop: 8 }} onClick={() => handleDelete(a.id)}>
-                Eliminar
-              </button>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
