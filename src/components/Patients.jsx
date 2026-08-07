@@ -47,9 +47,9 @@ export default function Patients({ patients, reload }) {
 
   function templatesFor(p) {
     return [
-      { label: 'Confirmar próxima cita', text: `Hola ${p.name}, te escribimos de Ingrid Cantú Dental para confirmar tu próxima cita. ¿Nos confirmas tu asistencia?` },
-      { label: 'Agendar nueva cita', text: `Hola ${p.name}, ¿te gustaría agendar tu próxima cita en Ingrid Cantú Dental? Cuéntanos qué día y horario te acomoda.` },
-      { label: 'Seguimiento de tratamiento', text: `Hola ${p.name}, ¿cómo te has sentido después de tu último tratamiento? Cualquier duda, con gusto te ayudamos.` },
+      { label: 'Confirmar próxima cita', text: `Hola ${p.name}, ¿podrías confirmarnos tu próxima cita en Ingrid Cantú Dental?` },
+      { label: 'Agendar nueva cita', text: `Hola ${p.name}, nos gustaría agendar tu próxima cita en Ingrid Cantú Dental. ¿Qué día te funciona?` },
+      { label: 'Seguimiento de tratamiento', text: `Hola ${p.name}, queremos darte seguimiento a tu tratamiento dental. ¿Cómo te has sentido?` },
     ];
   }
 
@@ -110,15 +110,17 @@ export default function Patients({ patients, reload }) {
         </div>
       )}
 
-      <div className="grid-2">
-        {patients
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((p) => (
-            <div className="card accent-copper" key={p.id}>
-              <h3>{p.name}</h3>
-              <div className="meta">{p.phone || 'Sin teléfono'}</div>
-              {p.notes && <div className="meta" style={{ marginTop: 6 }}>{p.notes}</div>}
-              <div className="card-footer">
+      {patients
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((p) => (
+          <div className="card" key={p.id}>
+            <div className="card-row">
+              <div>
+                <h3>{p.name}</h3>
+                <div className="meta">{p.phone || 'Sin teléfono'}</div>
+                {p.notes && <div className="meta" style={{ marginTop: 6 }}>{p.notes}</div>}
+              </div>
+              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                 <WhatsAppButton phone={p.phone} templates={templatesFor(p)} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="ghost" onClick={() => startEdit(p)}>Editar</button>
@@ -126,8 +128,8 @@ export default function Patients({ patients, reload }) {
                 </div>
               </div>
             </div>
-          ))}
-      </div>
+          </div>
+        ))}
     </div>
   );
 }
