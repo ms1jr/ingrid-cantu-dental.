@@ -75,9 +75,8 @@ export default function Treatments({ treatments, patients, reload }) {
 
   function templatesFor(t) {
     return [
-      { label: 'Confirmar próxima cita', text: `Hola ${t.patientName}, te escribimos de Ingrid Cantú Dental para confirmar tu próxima cita.` },
-      { label: 'Agendar nueva cita', text: `Hola ${t.patientName}, ¿agendamos tu próxima cita de seguimiento a tu tratamiento (${t.service})?` },
-      { label: 'Seguimiento', text: `Hola ${t.patientName}, ¿cómo te has sentido después de tu tratamiento (${t.service})? Cualquier duda, aquí estamos.` },
+      { label: 'Seguimiento de tratamiento', text: `Hola ${t.patientName}, te damos seguimiento a tu tratamiento (${t.service}) en Ingrid Cantú Dental. ¿Cómo te has sentido?` },
+      { label: 'Recordatorio de pago', text: `Hola ${t.patientName}, te escribimos para recordarte el pago pendiente de tu tratamiento (${t.service}) en Ingrid Cantú Dental.` },
     ];
   }
 
@@ -93,22 +92,22 @@ export default function Treatments({ treatments, patients, reload }) {
         </button>
       </div>
 
-      <div className="stats-row">
-        <div className="stat-card stat-copper">
+      <div className="stat-grid">
+        <div className="card stat-card accent-copper">
           <div className="meta">Hoy</div>
-          <h2>${dailyTotal.toLocaleString('es-MX')}</h2>
+          <h2 className="stat-number" style={{ fontSize: 22 }}>${dailyTotal.toLocaleString('es-MX')}</h2>
         </div>
-        <div className="stat-card stat-tan">
+        <div className="card stat-card accent-terracotta">
           <div className="meta">Esta semana</div>
-          <h2>${weeklyTotal.toLocaleString('es-MX')}</h2>
+          <h2 className="stat-number" style={{ fontSize: 22 }}>${weeklyTotal.toLocaleString('es-MX')}</h2>
         </div>
-        <div className="stat-card stat-green">
+        <div className="card stat-card accent-gold">
           <div className="meta">Este mes</div>
-          <h2>${monthlyTotal.toLocaleString('es-MX')}</h2>
+          <h2 className="stat-number" style={{ fontSize: 22 }}>${monthlyTotal.toLocaleString('es-MX')}</h2>
         </div>
-        <div className="stat-card stat-ink">
+        <div className="card stat-card accent-copper">
           <div className="meta">Este año</div>
-          <h2>${annualTotal.toLocaleString('es-MX')}</h2>
+          <h2 className="stat-number" style={{ fontSize: 22 }}>${annualTotal.toLocaleString('es-MX')}</h2>
         </div>
       </div>
 
@@ -170,27 +169,27 @@ export default function Treatments({ treatments, patients, reload }) {
         </div>
       )}
 
-      <div className="grid-2">
-        {sorted.map((t) => {
-          const patient = patients.find((p) => p.id === t.patientId);
-          return (
-            <div className="card accent-green" key={t.id}>
-              <div className="card-row">
+      {sorted.map((t) => {
+        const patient = patients.find((p) => p.id === t.patientId);
+        return (
+          <div className="card" key={t.id}>
+            <div className="card-row">
+              <div>
                 <h3>{t.service}</h3>
-                <span className="badge">${t.cost.toLocaleString('es-MX')}</span>
+                <div className="meta">{t.patientName} · {t.date}</div>
               </div>
-              <div className="meta">{t.patientName} · {t.date}</div>
-              <div className="card-footer">
-                <WhatsAppButton phone={patient?.phone} templates={templatesFor(t)} label="💬" />
+              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                <span className="badge">${t.cost.toLocaleString('es-MX')}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
+                  {patient?.phone && <WhatsAppButton phone={patient.phone} templates={templatesFor(t)} label="💬" />}
                   <button className="ghost" onClick={() => startEdit(t)}>Editar</button>
                   <button className="ghost" onClick={() => handleDelete(t.id)}>Eliminar</button>
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
