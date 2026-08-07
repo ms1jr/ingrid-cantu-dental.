@@ -1,6 +1,6 @@
 const DB_NAME = 'ic-dental-db';
-const DB_VERSION = 1;
-const STORES = ['patients', 'appointments', 'treatments'];
+const DB_VERSION = 2;
+const STORES = ['patients', 'appointments', 'treatments', 'prescriptions'];
 
 function openDB() {
   return new Promise((resolve, reject) => {
