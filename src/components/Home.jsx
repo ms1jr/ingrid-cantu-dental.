@@ -1,3 +1,5 @@
+import LeafMotif from './LeafMotif';
+
 export default function Home({ patients, appointments, treatments }) {
   const today = new Date().toISOString().slice(0, 10);
   const todayAppointments = appointments
@@ -10,35 +12,40 @@ export default function Home({ patients, appointments, treatments }) {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1>Hola, Dra. Cantú</h1>
-          <div className="sub">
+      <div className="hero">
+        <LeafMotif className="hero-leaf" color="#ffffff" />
+        <div className="hero-content">
+          <div className="sub" style={{ color: 'rgba(255,255,255,0.85)' }}>
             {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+          <h1 style={{ color: '#fff', fontSize: 30, marginTop: 4 }}>Hola, Dra. Cantú 🦷</h1>
+          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, marginTop: 6 }}>
+            Este es el resumen de tu consultorio hoy.
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-        <div className="card" style={{ flex: 1, minWidth: 140 }}>
+      <div className="stat-grid">
+        <div className="card stat-card accent-copper">
           <div className="meta">Pacientes</div>
-          <h2 style={{ fontSize: 28, marginTop: 4 }}>{patients.length}</h2>
+          <h2 className="stat-number">{patients.length}</h2>
         </div>
-        <div className="card" style={{ flex: 1, minWidth: 140 }}>
+        <div className="card stat-card accent-terracotta">
           <div className="meta">Citas hoy</div>
-          <h2 style={{ fontSize: 28, marginTop: 4 }}>{todayAppointments.length}</h2>
+          <h2 className="stat-number">{todayAppointments.length}</h2>
         </div>
-        <div className="card" style={{ flex: 1, minWidth: 140 }}>
+        <div className="card stat-card accent-gold">
           <div className="meta">Ingresos del mes</div>
-          <h2 style={{ fontSize: 28, marginTop: 4 }}>${monthTotal.toLocaleString('es-MX')}</h2>
+          <h2 className="stat-number">${monthTotal.toLocaleString('es-MX')}</h2>
         </div>
       </div>
 
-      <div className="divider-leaf">🌿</div>
-
-      <h3 style={{ marginBottom: 12 }}>Agenda de hoy</h3>
+      <h3 style={{ margin: '28px 0 12px' }}>Agenda de hoy</h3>
       {todayAppointments.length === 0 && (
-        <div className="empty-state">No hay citas para hoy.</div>
+        <div className="empty-state">
+          <LeafMotif className="empty-leaf" color="#d8c4a8" />
+          <div style={{ marginTop: 10 }}>No hay citas para hoy. Buen momento para ponerte al día. 🌿</div>
+        </div>
       )}
       {todayAppointments.map((a) => (
         <div className="card" key={a.id}>
