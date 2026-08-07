@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { buildWhatsAppLink } from '../utils/whatsapp';
 
-export default function WhatsAppButton({ phone, templates, label = '💬 WhatsApp' }) {
+export default function WhatsAppButton({ phone, templates = [], label = '💬 WhatsApp' }) {
   const [open, setOpen] = useState(false);
-  const [customText, setCustomText] = useState('');
+  const [custom, setCustom] = useState('');
 
   if (!phone) return null;
 
-  function send(text) {
-    if (!text.trim()) return;
-    window.open(buildWhatsAppLink(phone, text), '_blank');
+  function send(message) {
+    window.open(buildWhatsAppLink(phone, message), '_blank');
     setOpen(false);
-    setCustomText('');
+    setCustom('');
   }
 
   return (
@@ -21,7 +20,7 @@ export default function WhatsAppButton({ phone, templates, label = '💬 WhatsAp
       </button>
       {open && (
         <div className="wa-popover">
-          <div className="wa-popover-title">Elige un mensaje</div>
+          <div className="wa-popover-title">¿Qué quieres enviar?</div>
           {templates.map((t, i) => (
             <button key={i} type="button" className="wa-option" onClick={() => send(t.text)}>
               {t.label}
@@ -31,21 +30,22 @@ export default function WhatsAppButton({ phone, templates, label = '💬 WhatsAp
             <textarea
               rows={2}
               placeholder="O escribe tu propio mensaje..."
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
             />
             <button
               type="button"
               className="primary"
-              disabled={!customText.trim()}
-              onClick={() => send(customText)}
+              style={{ marginTop: 6, width: '100%' }}
+              disabled={!custom.trim()}
+              onClick={() => send(custom)}
             >
-              Enviar mensaje
+              Enviar
             </button>
           </div>
-          <button type="button" className="wa-close" onClick={() => setOpen(false)}>Cerrar</button>
         </div>
       )}
     </div>
   );
 }
+
