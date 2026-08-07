@@ -61,8 +61,8 @@ export default function Appointments({ appointments, patients, reload }) {
   function templatesFor(a) {
     const label = new Date(a.datetime).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' });
     return [
-      { label: 'Confirmar esta cita', text: `Hola ${a.patientName}, te confirmamos tu cita en Ingrid Cantú Dental el ${label}. ¿Puedes confirmarnos tu asistencia?` },
-      { label: 'Pedir reagendar', text: `Hola ${a.patientName}, necesitamos reagendar tu cita del ${label}. ¿Qué otro día u horario te funciona?` },
+      { label: 'Confirmar cita', text: `Hola ${a.patientName}, te confirmamos tu cita en Ingrid Cantú Dental el ${label}. ¿Puedes confirmarnos tu asistencia?` },
+      { label: 'Reagendar cita', text: `Hola ${a.patientName}, necesitamos reagendar tu cita del ${label}. ¿Qué otro día te funciona?` },
       { label: 'Recordatorio amistoso', text: `Hola ${a.patientName}, te recordamos tu cita en Ingrid Cantú Dental el ${label}. ¡Te esperamos!` },
     ];
   }
@@ -143,21 +143,28 @@ export default function Appointments({ appointments, patients, reload }) {
         </div>
       )}
 
-      <div className="grid-2">
-        {upcoming.map((a) => {
-          const patient = patients.find((p) => p.id === a.patientId);
-          return (
-            <div className="card accent-tan" key={a.id}>
-              <h3>{a.patientName}</h3>
-              <div className="meta">
-                {new Date(a.datetime).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' })}
+      {upcoming.map((a) => {
+        const patient = patients.find((p) => p.id === a.patientId);
+        return (
+          <div className="card" key={a.id}>
+            <div className="card-row">
+              <div>
+                <h3>{a.patientName}</h3>
+                <div className="meta">
+                  {new Date(a.datetime).toLocaleString('es-MX', {
+                    dateStyle: 'full',
+                    timeStyle: 'short',
+                  })}
+                </div>
+                {a.notes && <div className="meta" style={{ marginTop: 6 }}>{a.notes}</div>}
               </div>
-              {a.notes && <div className="meta" style={{ marginTop: 6 }}>{a.notes}</div>}
-              <div className="card-footer">
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="ghost" onClick={() => downloadAppointmentICS(a)}>📅</button>
-                  <a className="ghost" style={{ textDecoration: 'none' }} href={buildReminderShortcutURL(a)}>⏰</a>
-                  <WhatsAppButton phone={patient?.phone} templates={templatesFor(a)} label="💬" />
+              <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button className="ghost" onClick={() => downloadAppointmentICS(a)}>📅 Calendario</button>
+                  <a className="ghost" style={{ textDecoration: 'none' }} href={buildReminderShortcutURL(a)}>
+                    ⏰ Recordatorio
+                  </a>
+                  {patient?.phone && <WhatsAppButton phone={patient.phone} templates={templatesFor(a)} />}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="ghost" onClick={() => startEdit(a)}>Editar</button>
@@ -165,9 +172,9 @@ export default function Appointments({ appointments, patients, reload }) {
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
