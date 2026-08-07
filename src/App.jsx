@@ -4,12 +4,15 @@ import Home from './components/Home';
 import Patients from './components/Patients';
 import Appointments from './components/Appointments';
 import Treatments from './components/Treatments';
+import Prescriptions from './components/Prescriptions';
+import Footer from './components/Footer';
 
 const TABS = [
   { id: 'home', label: 'Inicio', icon: '🏠' },
   { id: 'patients', label: 'Pacientes', icon: '🦷' },
   { id: 'appointments', label: 'Citas', icon: '🗓️' },
   { id: 'treatments', label: 'Tratamientos', icon: '💰' },
+  { id: 'prescriptions', label: 'Recetas', icon: '📄' },
 ];
 
 export default function App() {
@@ -17,11 +20,13 @@ export default function App() {
   const [patients, setPatients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [treatments, setTreatments] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
 
   const reload = useCallback(async () => {
     setPatients(await db.getAll('patients'));
     setAppointments(await db.getAll('appointments'));
     setTreatments(await db.getAll('treatments'));
+    setPrescriptions(await db.getAll('prescriptions'));
   }, []);
 
   useEffect(() => {
@@ -60,6 +65,10 @@ export default function App() {
         {tab === 'treatments' && (
           <Treatments treatments={treatments} patients={patients} reload={reload} />
         )}
+        {tab === 'prescriptions' && (
+          <Prescriptions prescriptions={prescriptions} patients={patients} reload={reload} />
+        )}
+        <Footer />
       </main>
     </div>
   );
