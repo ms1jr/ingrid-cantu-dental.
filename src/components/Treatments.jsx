@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { db } from '../db';
 import WhatsAppButton from './WhatsAppButton';
+import { openPrintableDocument, receiptHTML } from '../utils/documents';
 
 const EMPTY = { patientId: '', service: '', cost: '', date: '' };
 
@@ -48,6 +49,7 @@ export default function Treatments({ treatments, patients, reload }) {
       service: form.service,
       cost: Number(form.cost) || 0,
       date: form.date || new Date().toISOString().slice(0, 10),
+      folio: existing ? existing.folio : null,
       createdAt: existing ? existing.createdAt : Date.now(),
     });
     cancelForm();
@@ -57,6 +59,19 @@ export default function Treatments({ treatments, patients, reload }) {
   async function handleDelete(id) {
     await db.remove('treatments', id);
     reload();
+  }
+
+  async function handleReceipt(t) {
+    let folio = t.folio;
+    if (!folio) {
+      const withFolio = treatments.filter((x) => x.folio).length;
+      folio = `IC-${String(withFolio + 1).padStart(5, '0')}`;
+      await db.put('treatments', { ...t, folio });
+      reload();
+    }
+    openPrintableDocument(
+      receiptHTML({ folio, patientName: t.patientName, service: t.service, cost: t.cost, date: t.date })
+    );
   }
 
   const sorted = [...treatments].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -77,6 +92,7 @@ export default function Treatments({ treatments, patients, reload }) {
     return [
       { label: 'Seguimiento de tratamiento', text: `Hola ${t.patientName}, te damos seguimiento a tu tratamiento (${t.service}) en Ingrid Cantú Dental. ¿Cómo te has sentido?` },
       { label: 'Recordatorio de pago', text: `Hola ${t.patientName}, te escribimos para recordarte el pago pendiente de tu tratamiento (${t.service}) en Ingrid Cantú Dental.` },
+      { label: 'Enviar recibo', text: `Hola ${t.patientName}, aquí tienes el resumen de tu pago en Ingrid Cantú Dental${t.folio ? ` (folio ${t.folio})` : ''}: ${t.service} - $${Number(t.cost).toLocaleString('es-MX')} MXN, fecha ${t.date}. El comprobante en PDF te lo comparto por aquí también.` },
     ];
   }
 
@@ -176,11 +192,12 @@ export default function Treatments({ treatments, patients, reload }) {
             <div className="card-row">
               <div>
                 <h3>{t.service}</h3>
-                <div className="meta">{t.patientName} · {t.date}</div>
+                <div className="meta">{t.patientName} · {t.date}{t.folio ? ` · Folio ${t.folio}` : ''}</div>
               </div>
               <div className="actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                 <span className="badge">${t.cost.toLocaleString('es-MX')}</span>
                 <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="ghost" onClick={() => handleReceipt(t)}>🧾 Recibo</button>
                   {patient?.phone && <WhatsAppButton phone={patient.phone} templates={templatesFor(t)} label="💬" />}
                   <button className="ghost" onClick={() => startEdit(t)}>Editar</button>
                   <button className="ghost" onClick={() => handleDelete(t.id)}>Eliminar</button>
